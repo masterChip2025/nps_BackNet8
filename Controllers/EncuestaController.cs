@@ -1,11 +1,12 @@
-using ApiEcommerce.Models.Dtos.Calificacion;
-using ApiEcommerce.Models;
-using ApiEcommerce.Repository.IRepository;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
-
+using ApiEcommerce.Models;
+using ApiEcommerce.Models.Dtos.Calificacion;
+using ApiEcommerce.Repository.IRepository;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+// using Microsoft.EntityFrameworkCore;
 
 namespace ApiEcommerce.Controllers;
 
@@ -20,7 +21,6 @@ public class EncuestaController : ControllerBase
     {
         _calificacionRepository = calificacionRepository;
     }
-
 
     [HttpGet]
     public IActionResult Get()
@@ -41,33 +41,52 @@ public class EncuestaController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        // var userName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-        // var userName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
         var userId = User.FindFirstValue("id");
-        var userName = User.FindFirstValue("username"); 
-        var role = User.FindFirstValue("role"); 
+        var userName = User.FindFirstValue("username");
+        var role = User.FindFirstValue("role");
         if (string.IsNullOrEmpty(userName))
         {
             return Unauthorized("No se pudo identificar al usuario desde el token.");
         }
 
-        var yaExisteCalificacion =  _calificacionRepository.AlreadyRespondedAsync(userName);
+        var yaExisteCalificacion = await _calificacionRepository.AlreadyRespondedAsync(userName);
 
         if (yaExisteCalificacion)
         {
-            return Conflict(new { message = "El usuario ya ha respondido esta encuesta anteriormente." });
+            return Conflict(
+                new { message = "El usuario ya ha respondido esta encuesta anteriormente." }
+            );
         }
 
         var nuevaCalificacion = new Calificacion
         {
             CalificacionValor = dto.CalificacionValor,
             UserName = userName,
-            FechaCreacion = DateTime.UtcNow
+            FechaCreacion = DateTime.UtcNow,
         };
 
         await _calificacionRepository.AddAsync(nuevaCalificacion);
         // await _context.SaveChangesAsync();
 
         return Ok(new { message = "¡Gracias! Su calificación ha sido registrada exitosamente." });
+    }
+
+    [HttpGet("yaRespondio")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> YaRespondio()
+    {
+        var userName = User.FindFirstValue("username");
+        
+        if (string.IsNullOrEmpty(userName))
+        {
+            return Unauthorized(
+                new { message = "No se pudo identificar al usuario desde el token." }
+            );
+        }
+
+        var yaRespondio = await _calificacionRepository.AlreadyRespondedAsync(userName);
+
+        return Ok(new { yaRespondio });
     }
 }

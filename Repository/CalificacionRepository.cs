@@ -45,7 +45,7 @@ public class CalificacionRepository : ICalificacionRepository
         var neutros = await _db.Calificaciones.CountAsync(c => c.Categoria == "Neutro");
         var detractores = await _db.Calificaciones.CountAsync(c => c.Categoria == "Detractor");
 
-        var nps = ((promotores * 100.0 / total) - (detractores * 100.0 / total));
+        var nps = ((double)(promotores - detractores) / total) * 100;
 
         return new
         {
@@ -53,7 +53,7 @@ public class CalificacionRepository : ICalificacionRepository
             promotores = promotores * 100.0 / total,
             neutros = neutros * 100.0 / total,
             detractores = detractores * 100.0 / total,
-            nps,
+            nps = Math.Round(nps, 2),
         };
     }
 }

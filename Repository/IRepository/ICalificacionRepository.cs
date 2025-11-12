@@ -5,7 +5,7 @@ namespace ApiEcommerce.Repository.IRepository;
 
 public interface ICalificacionRepository
 {
-    // bool AlreadyRespondedAsync(string userName);
+    Task<object> ObtenerEstadisticasAsync();
 
     Task AddAsync(Calificacion calificacion);
 

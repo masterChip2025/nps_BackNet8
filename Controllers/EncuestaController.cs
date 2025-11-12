@@ -6,6 +6,7 @@ using ApiEcommerce.Models.Dtos.Calificacion;
 using ApiEcommerce.Repository.IRepository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 // using Microsoft.EntityFrameworkCore;
 
 namespace ApiEcommerce.Controllers;
@@ -58,15 +59,22 @@ public class EncuestaController : ControllerBase
             );
         }
 
+        string categoria = dto.CalificacionValor switch
+        {
+            >= 9 => "Promotor",
+            >= 7 => "Neutro",
+            _ => "Detractor",
+        };
+
         var nuevaCalificacion = new Calificacion
         {
             CalificacionValor = dto.CalificacionValor,
             UserName = userName,
+            Categoria = categoria,
             FechaCreacion = DateTime.UtcNow,
         };
 
         await _calificacionRepository.AddAsync(nuevaCalificacion);
-        // await _context.SaveChangesAsync();
 
         return Ok(new { message = "¡Gracias! Su calificación ha sido registrada exitosamente." });
     }
@@ -77,7 +85,7 @@ public class EncuestaController : ControllerBase
     public async Task<IActionResult> YaRespondio()
     {
         var userName = User.FindFirstValue("username");
-        
+
         if (string.IsNullOrEmpty(userName))
         {
             return Unauthorized(

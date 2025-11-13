@@ -6,8 +6,8 @@ using ApiEcommerce.Models.Dtos.Calificacion;
 using ApiEcommerce.Repository.IRepository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
-// using Microsoft.EntityFrameworkCore;
+using ApiEcommerce.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace ApiEcommerce.Controllers;
 
@@ -17,10 +17,16 @@ namespace ApiEcommerce.Controllers;
 public class EncuestaController : ControllerBase
 {
     private readonly ICalificacionRepository _calificacionRepository;
+    private readonly IHubContext<EstadisticasHub> _hubContext;
 
-    public EncuestaController(ICalificacionRepository calificacionRepository)
+    public EncuestaController
+    (
+        ICalificacionRepository calificacionRepository,
+        IHubContext<EstadisticasHub> hubContext
+    )
     {
         _calificacionRepository = calificacionRepository;
+        _hubContext = hubContext;
     }
 
     [HttpGet]
@@ -75,6 +81,7 @@ public class EncuestaController : ControllerBase
         };
 
         await _calificacionRepository.AddAsync(nuevaCalificacion);
+        await _hubContext.Clients.All.SendAsync("ActualizacionEstadisticas");
 
         return Ok(new { message = "¡Gracias! Su calificación ha sido registrada exitosamente." });
     }

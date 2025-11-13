@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Microsoft.VisualBasic;
+using ApiEcommerce.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -182,6 +183,8 @@ builder.Services.AddCors(options =>
     );
 });
 
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -198,6 +201,8 @@ if (app.Environment.IsDevelopment())
 app.UseStaticFiles();
 
 app.UseHttpsRedirection();
+
+app.MapHub<EstadisticasHub>("/estadisticasHub");
 
 app.UseCors(PolicyNames.AllowSpecificOrigin);
 
